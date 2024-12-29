@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificador de Mega Sena</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        input[type="number"] {
+            padding: 8px;
+            width: 60px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #ecf0f1;
+            border: 1px solid #bdc3c7;
+        }
+        .highlight {
+            font-weight: bold;
+            color: green;
+        }
+        .winner {
+            font-weight: bold;
+            color: red;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Verificador de Mega Sena</h1>
+    
+    <div class="input-group">
+        <label for="numeroSorteado">Digite um número sorteado:</label><br>
+        <input type="number" id="numeroSorteado" min="1" max="60">
+    </div>
+
+    <div class="input-group">
+        <button onclick="adicionarNumero()">Adicionar Número</button>
+        <button onclick="exibirListaJogos()">Lista de Jogos</button>
+    </div>
+    
+    <div class="result" id="numerosDigitados">
+        <strong>Lista de Números Sorteados:</strong> <span id="listaNumeros">Nenhum número sorteado ainda.</span>
+    </div>
+
+    <div class="result" id="resultado">
+        <!-- O resultado será exibido aqui -->
+    </div>
+
+    <div class="result hidden" id="listaJogos">
+        <strong>Jogos:</strong>
+        <div id="jogosDetalhados"></div>
+    </div>
+
+    <script>
+        // Lista de jogos com números e nomes
+        const jogos = [
+            { numeros: [2, 9, 11, 33, 47, 60], nome: "Xavier" },
+            { numeros: [5, 12, 36, 45, 58, 60], nome: "Xavier" },
+            { numeros: [2, 11, 15, 21, 45, 55], nome: "Renata" },
+            { numeros: [6, 10, 18, 20, 41, 55], nome: "Renata" },
+            { numeros: [2, 8, 12, 20, 24, 25], nome: "Janiesca" },
+            { numeros: [15, 17, 19, 37, 55, 60], nome: "Janiesca" },
+            { numeros: [9, 17, 18, 27, 28, 30], nome: "Klara" },
+            { numeros: [7, 13, 15, 21, 26, 31], nome: "Klara" },
+            { numeros: [4, 7, 17, 21, 25, 58], nome: "Thamyris" },
+            { numeros: [1, 16, 19, 29, 33, 45], nome: "Thamyris" },
+            { numeros: [2, 7, 12, 15, 40, 57], nome: "Manu" },
+            { numeros: [1, 7, 10, 20, 21, 35], nome: "Manu" },
+            { numeros: [2, 12, 19, 24, 36, 57], nome: "Dayvisson" },
+            { numeros: [4, 18, 23, 28, 46, 52], nome: "Dayvisson" },
+            { numeros: [5, 10, 20, 28, 33, 48], nome: "Dayvid" },
+            { numeros: [29, 32, 41, 46, 53, 58], nome: "Dayvid" },
+            { numeros: [5, 13, 18, 42, 55, 59], nome: "Arthur" },
+            { numeros: [1, 12, 27, 47, 52, 58], nome: "Arthur" },
+            { numeros: [15, 23, 38, 50, 52, 54], nome: "Pedro" },
+            { numeros: [6, 11, 22, 26, 37, 40], nome: "Pedro" },
+            { numeros: [1, 13, 28, 37, 43, 53], nome: "Evelyn" },
+            { numeros: [3, 7, 20, 25, 45, 58], nome: "Evelyn" },
+            { numeros: [10, 18, 27, 37, 44, 50], nome: "Jonas" },
+            { numeros: [5, 12, 23, 32, 46, 51], nome: "Jonas" },
+            { numeros: [1, 3, 8, 17, 18, 21], nome: "Almir" },
+            { numeros: [16, 24, 28, 31, 36, 49], nome: "Almir" },
+            { numeros: [6, 13, 17, 22, 25, 40], nome: "Almir" },
+        ];
+
+        let numerosSorteados = [];
+
+        function adicionarNumero() {
+            const numero = parseInt(document.getElementById("numeroSorteado").value);
+            
+            if (numero && numero >= 1 && numero <= 60 && !numerosSorteados.includes(numero)) {
+                numerosSorteados.push(numero);
+                document.getElementById("numeroSorteado").value = ""; // Limpar o campo após adicionar
+                atualizarListaNumeros();
+                verificarAcertos(); // Verificar acertos imediatamente após adicionar o número
+            } else {
+                alert("Por favor, insira um número válido entre 1 e 60, e que não tenha sido inserido ainda.");
+            }
+        }
+
+        function atualizarListaNumeros() {
+            document.getElementById("listaNumeros").textContent = numerosSorteados.join(", ");
+        }
+
+        function verificarAcertos() {
+            let resultado = "";
+            let maxAcertos = 0;
+            let melhorJogo = -1;
+
+            jogos.forEach((jogo, index) => {
+                const intersect = numerosSorteados.filter(num => jogo.numeros.includes(num));
+                const acertos = intersect.length;
+
+                if (acertos > 0) {
+                    resultado += `No jogo ${index + 1}, você acertou ${acertos} número(s).<br>`;
+                    if (acertos > maxAcertos) {
+                        maxAcertos = acertos;
+                        melhorJogo = index;
+                    }
+                }
+            });
+
+            if (melhorJogo !== -1) {
+                resultado = resultado.replace(`No jogo ${melhorJogo + 1}`, `<span class="highlight">No jogo ${melhorJogo + 1}</span>`);
+            }
+
+            resultado += `<br><br>Você sorteou ${numerosSorteados.length} número(s).`;
+            document.getElementById("resultado").innerHTML = resultado;
+        }
+
+        function exibirListaJogos() {
+            const listaJogosDiv = document.getElementById("jogosDetalhados");
+            listaJogosDiv.innerHTML = "";
+
+            jogos.forEach((jogo, index) => {
+                listaJogosDiv.innerHTML += `Jogo ${index + 1}: ${jogo.numeros.join(", ")} - ${jogo.nome}<br>`;
+            });
+
+            document.getElementById("listaJogos").classList.remove("hidden");
+        }
+    </script>
+
+</body>
+</html>
